@@ -123,7 +123,7 @@ def train_model(train_dl,model,device):
     optimizer=SGD(model.parameters(),lr=0.001,momentum=0.9)
     writer=SummaryWriter(log_dir="runs/mnist_experiment")# 创建日志目录
     # 枚举 epochs
-    for epoch in range(20): # 20轮训练
+    for epoch in range(30): # 20轮训练
         running_loss = 0.0
         total,correct = 0,0
         # 枚举 mini batches
@@ -147,7 +147,8 @@ def train_model(train_dl,model,device):
             total+=targets.size(0)
         avg_loss=running_loss/len(train_dl)
         acc=correct/total
-        print(f"Epoch(第n次迭代) {epoch + 1}, Loss(此时的损失): {avg_loss:.4f}, Accuracy(模型精确度): {acc:.4f}")
+        print(f"Epoch(第n次迭代) {epoch + 1}, Loss(此时的损失): {avg_loss:.4f}, Accuracy(模型精确度): {acc * 100:.2f}%")
+
 
         # 每轮记录到 TensorBoard
         writer.add_scalar("Loss/train", avg_loss, epoch)
