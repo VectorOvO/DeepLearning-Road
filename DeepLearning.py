@@ -1,5 +1,6 @@
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import pandas as pd
 import torch
@@ -21,6 +22,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 import torch
 from Draw import test_dl
+from torch.utils.tensorboard import SummaryWriter
 
 
 # 定义数据集
@@ -111,17 +113,25 @@ def prepare_data(path):
     test_dl = DataLoader(test, batch_size=1024, shuffle=False)
     return train_dl, test_dl
 
+writer = SummaryWriter(log_dir='runs/mnist_experiment')
+
     # 训练模型
-def train_model(train_dl,model):
+def train_model(train_dl,model,device):
     # 定义优化器
+    model.to(device)
     criterion=CrossEntropyLoss()
     optimizer=SGD(model.parameters(),lr=0.001,momentum=0.9)
+    writer=SummaryWriter(log_dir="runs/mnist_experiment")# 创建日志目录
     # 枚举 epochs
-    for epoch in range(20):
+    for epoch in range(20): # 20轮训练
+        running_loss = 0.0
+        total,correct = 0,0
         # 枚举 mini batches
         for i,(inputs,targets) in enumerate(train_dl):
+            inputs, targets = inputs.to(device), targets.to(device)
             # 梯度清楚
             optimizer.zero_grad()
+            outputs = model(inputs)
             # 计算模型输出
             yhat=model(inputs)
             # 计算损失
@@ -130,6 +140,22 @@ def train_model(train_dl,model):
             loss.backward()
             # 升级模型权重
             optimizer.step()
+
+            running_loss+=loss.item()
+            preds=torch.argmax(yhat,dim=1)
+            correct+=(preds==targets).sum().item()
+            total+=targets.size(0)
+        avg_loss=running_loss/len(train_dl)
+        acc=correct/total
+        print(f"Epoch(第n次迭代) {epoch + 1}, Loss(此时的损失): {avg_loss:.4f}, Accuracy(模型精确度): {acc:.4f}")
+
+        # 每轮记录到 TensorBoard
+        writer.add_scalar("Loss/train", avg_loss, epoch)
+        writer.add_scalar("Accuracy/train", acc, epoch)
+    writer.close()
+    print("训练日志已写入 TensorBoard")
+
+
 # 评估模型
 def evaluate_model(test_dl, model, device='cpu'):
     model.to(device)
