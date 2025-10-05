@@ -75,7 +75,11 @@ def predict_image(model, filepath, device):
 
 # ==== 用法示例 ====
 if __name__ == "__main__":
-    img_path = "digit7.png"   # 或者 digit.png，确保文件存在
+    img_path = "digit3.png"   # 或者 digit.png，确保文件存在
     if not os.path.exists(img_path):
         raise SystemExit(f"{img_path} not found. Put your drawn image in the script folder.")
     pred, top3 = predict_image(model, img_path, device)
+    # 此时如果跑完了在Terminal里输入
+    # conda activate DeepLearningPro
+    # tensorboard --logdir=runs
+    # 点击 http://localhost:6006/ 即可查看损失曲线及其精确度曲线
